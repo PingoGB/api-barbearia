@@ -6,7 +6,7 @@ import bcrypt from 'bcrypt'
 
 const app = express()
 const PORT = 3000
-
+const SALT = await bcrypt.genSalt(10)
 app.use (express.json())
 app.use (cors())
 app.use (express.static('public'))
@@ -14,8 +14,7 @@ app.use (express.static('public'))
 app.post('/register', async (req, res) =>{
     try{
     const {nome, email, senha} = req.body
-    const salt = await bcrypt.genSalt(10)
-    const hashedSenha = await bcrypt.hash(senha, salt)
+    const hashedSenha = await bcrypt.hash(senha, SALT)
     const register = await pool.query("INSERT INTO usuario (nome, email, senha) VALUES ($1, $2, $3) RETURNING *", [nome, email, hashedSenha])
     return res.status(201).json(register.rows[0])
     } catch(err){
@@ -50,6 +49,49 @@ app.post('/login', async (req, res) =>{
         })
     } catch(err){
         return res.status(400).json({erro: "Erro ao faer login."})
+    }
+})
+
+app.post('/login', async (req, res) =>{
+    try{
+        const {email, senha} = req.body;
+        const login = await pool.query("SELECT * FROM usuario WHERE email = $1", [email])
+
+        if (login.rows.lenght === 0){
+            return res.status(404).json({erro: "Credenciais inválidas."})
+        }
+
+        const user = login.rows[0]
+
+        if (user.email !==email){
+            return res.status(404).json({erro: "Credenciais inválidas"})
+        }
+
+        const isSenhaValid = await bcrypt.compare(senha, user.senha)
+        if (!isSenhaValid){
+            return res.status(404).json({erro: "Credenciais inválidas."})
+        }
+
+        return res.status(200).json({
+            mensagem: "login realizado",
+            usuario: {
+                "nome": user.nome
+            }
+        })
+    } catch(err){
+        return res.status(400).json({erro: "Erro ao faer login."})
+    }
+})
+
+app.post('/barbeiro', async (req, res) =>{
+    const {nome, cpf, telefone} = req.body;
+    try{
+        const hashedCpf = await bcrypt.hash(cpf, SALT)
+        const hashedTelefone = await bcrypt.hash(telefone, SALT)
+        const register = await pool.query("INSERT INTO barbeiro (nome, cpf, telefone) VALUES ($1, $2, $3) RETURNING *", [nome, hashedCpf, hashedTelefone])
+        return res.status(201).json(register.rows[0])
+    } catch(err){
+        return res.status(400).json({erro: "Erro ao cadastrar barbeiro."})
     }
 })
 
