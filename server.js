@@ -22,6 +22,37 @@ app.post('/register', async (req, res) =>{
         return res.status(400).json({erro: "Erro ao criar usuário."})
     }
 })
+app.post('/login', async (req, res) =>{
+    try{
+        const {email, senha} = req.body;
+        const login = await pool.query("SELECT * FROM usuario WHERE email = $1", [email])
+
+        if (login.rows.lenght === 0){
+            return res.status(404).json({erro: "Credenciais inválidas."})
+        }
+
+        const user = login.rows[0]
+
+        if (user.email !==email){
+            return res.status(404).json({erro: "Credenciais inválidas"})
+        }
+
+        const isSenhaValid = await bcrypt.compare(senha, user.senha)
+        if (!isSenhaValid){
+            return res.status(404).json({erro: "Credenciais inválidas."})
+        }
+
+        return res.status(200).json({
+            mensagem: "login realizado",
+            usuario: {
+                "nome": user.nome
+            }
+        })
+    } catch(err){
+        return res.status(400).json({erro: "Erro ao faer login."})
+    }
+})
+
 
 
 app.listen(PORT, ()=>{
