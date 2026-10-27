@@ -109,10 +109,20 @@ app.put('/barbeiro/:id', async (req, res) =>{
     const {nome, telefone} = req.body;
     try{
         const telefoneHash = await bcrypt.hash(telefone, SALT)
-        const put = await pool.query("UPDATE FROM barbeiro SET nome = $1, telefone = $2 WHERE id = $3 RETURNING *", [nome, telefoneHash, id])
+        const put = await pool.query("UPDATE barbeiro SET nome = $1, telefone = $2 WHERE id = $3 RETURNING *", [nome, telefoneHash, id])
         return res.status(200).json(put.rows[0])
     }catch(err){
         return res.status(400).json("Erro ao atualizar barbeiro")
+    }
+})
+
+app.delete('/barbeiro/:id', async (req, res) =>{
+    const {id} = req.params;
+    try{
+        const deletar = await pool.query("DELETE FROM barbeiro WHERE id = $1 RETURNING *", [id])
+        return res.status(200).json("Barbeiro deletado com sucesso.")
+    } catch(err){
+        return res.status(400).json("Erro ao deletar barbeiro")
     }
 })
 
