@@ -95,7 +95,26 @@ app.post('/barbeiro', async (req, res) =>{
     }
 })
 
+app.get('/barbeiro', async (req, res) =>{
+    try{
+        const get = await pool.query("SELECT * FROM barbeiro")
+        return res.status(200).json(get.rows)
+    } catch(err){
+        return res.status(400).json("Erro ao listar barbeiros")
+    }
+})
 
+app.put('/barbeiro/:id', async (req, res) =>{
+    const {id} = req.params;
+    const {nome, telefone} = req.body;
+    try{
+        const telefoneHash = await bcrypt.hash(telefone, SALT)
+        const put = await pool.query("UPDATE FROM barbeiro SET nome = $1, telefone = $2 WHERE id = $3 RETURNING *", [nome, telefoneHash, id])
+        return res.status(200).json(put.rows[0])
+    }catch(err){
+        return res.status(400).json("Erro ao atualizar barbeiro")
+    }
+})
 
 app.listen(PORT, ()=>{
     console.log(`Servidor rodando na porta: ${PORT}`)
