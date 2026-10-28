@@ -8,8 +8,24 @@ const app = express()
 const PORT = 3000
 const SALT = await bcrypt.genSalt(10)
 app.use (express.json())
+app.use(cookieParser())
 app.use (cors())
 app.use (express.static('public'))
+const JWT_SECRET = '6845gfhdify348fh'
+
+function autenticarToken (req, res, next){
+    const token = req.cookies.token
+    if(!token){
+        return res.status(401).json({error: "Acesso nigado."})
+    }
+    try{
+        const usuarioJWT = jwt.verify(token, JWT_SECRET)
+        req.usuarioJWT = usuarioJWT;
+        next()
+    } catch(err){
+        return res.status(403).json("Erro ao formatar token.")
+    }
+}
 
 app.post('/register', async (req, res) =>{
     try{
@@ -145,6 +161,16 @@ app.post('/cliente', async (req, res) =>{
         return res.status(201).json(postCliente.rows[0])
     } catch(err){
         return res.status(400).json("Erro ao cadastrar cliente.")
+    }
+})
+
+app.put('/cliente/:id', async (req, res) =>{
+    const {nome, telefone} = req.body;
+    const {id} = req.params;
+    try{
+        
+    } catch(err){
+        return res.status(400).json("Erro ao atualizar cliente.")
     }
 })
 
