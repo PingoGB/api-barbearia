@@ -58,6 +58,18 @@ app.post('/login', async (req, res) =>{
             return res.status(404).json({erro: "Credenciais inválidas."})
         }
 
+        const token = jwt.sign(
+            {id: user.id, email: user.email},
+            JWT_SECRET,
+            {expiresIn: "1h"},
+        )
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: false, //pra testar localmente
+            sameSite: "lax",
+            maxAge: 3600000
+        })
+
         return res.status(200).json({
             mensagem: "login realizado",
             usuario: {
@@ -174,6 +186,15 @@ app.put('/cliente/:id', async (req, res) =>{
         return res.status(200).json(putCliente.rows[0])
     } catch(err){
         return res.status(400).json("Erro ao atualizar cliente.")
+    }
+})
+
+app.delete('/cliente/:id', async (req, res) =>{
+    const {id} = req.params;
+    try{
+
+    } catch(err){
+        return res.status(400).json("Erro ao deletar cliente")
     }
 })
 
