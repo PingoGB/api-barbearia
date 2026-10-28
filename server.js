@@ -156,7 +156,7 @@ app.delete('/barbeiro/:id', async (req, res) =>{
 })
 
 
-app.get('/cliente', async (req, res) =>{
+app.get('/cliente', autenticarToken, async (req, res) =>{
     try{
         const get = await pool.query("SELECT * FROM cliente")
         return res.status(200).json(get.rows)
@@ -192,7 +192,8 @@ app.put('/cliente/:id', async (req, res) =>{
 app.delete('/cliente/:id', async (req, res) =>{
     const {id} = req.params;
     try{
-
+        const deleteCliente = await pool.query("DELETE FROM cliente WHERE id = $1 RETURNING *", [id])
+        return req.status(200).json("Usuário deletado com sucesso")
     } catch(err){
         return res.status(400).json("Erro ao deletar cliente")
     }
