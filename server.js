@@ -126,6 +126,16 @@ app.delete('/barbeiro/:id', async (req, res) =>{
     }
 })
 
+
+app.get('/cliente', async (req, res) =>{
+    try{
+        const get = await pool.query("SELECT * FROM cliente")
+        return res.status(200).json(get.rows)
+    } catch(err){
+        return res.status(400).json("Erro ao consultar clientes.")
+    }
+})
+
 app.listen(PORT, ()=>{
     console.log(`Servidor rodando na porta: ${PORT}`)
 })
