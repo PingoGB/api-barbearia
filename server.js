@@ -3,6 +3,7 @@ import cors from 'cors'
 import jwt from 'jsonwebtoken'
 import pool from './db.js'
 import bcrypt from 'bcrypt'
+import cookieParser from 'cookie-parser'
 
 const app = express()
 const PORT = 3000
@@ -168,7 +169,9 @@ app.put('/cliente/:id', async (req, res) =>{
     const {nome, telefone} = req.body;
     const {id} = req.params;
     try{
-        
+        const telefoneHash = await bcrypt.hash(telefone, SALT)
+        const putCliente = await pool.query("UPDATE cliente SET nome = $1, telefone = $2 WHERE id = $3 RETURNING *", [nome, telefoneHash, id])
+        return res.status(200).json(putCliente.rows[0])
     } catch(err){
         return res.status(400).json("Erro ao atualizar cliente.")
     }
