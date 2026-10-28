@@ -40,5 +40,5 @@ id_cliente INT,
 
 foreign key (id_servico) references servico(id),
 foreign key (id_barbeiro) references barbeiro(id),
-foreign key (id_barbeiro) references cliente(id)
+foreign key (id_cliente) references cliente(id)
 );

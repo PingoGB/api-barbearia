@@ -2,7 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import jwt from 'jsonwebtoken'
 import pool from './db.js'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import cookieParser from 'cookie-parser'
 
 const app = express()
@@ -59,7 +59,7 @@ app.post('/login', async (req, res) =>{
         }
 
         const token = jwt.sign(
-            {id: user.id, email: user.email},
+            {id: user.id},
             JWT_SECRET,
             {expiresIn: "1h"},
         )
@@ -81,36 +81,6 @@ app.post('/login', async (req, res) =>{
     }
 })
 
-app.post('/login', async (req, res) =>{
-    try{
-        const {email, senha} = req.body;
-        const login = await pool.query("SELECT * FROM usuario WHERE email = $1", [email])
-
-        if (login.rows.lenght === 0){
-            return res.status(404).json({erro: "Credenciais inválidas."})
-        }
-
-        const user = login.rows[0]
-
-        if (user.email !==email){
-            return res.status(404).json({erro: "Credenciais inválidas"})
-        }
-
-        const isSenhaValid = await bcrypt.compare(senha, user.senha)
-        if (!isSenhaValid){
-            return res.status(404).json({erro: "Credenciais inválidas."})
-        }
-
-        return res.status(200).json({
-            mensagem: "login realizado",
-            usuario: {
-                "nome": user.nome
-            }
-        })
-    } catch(err){
-        return res.status(400).json({erro: "Erro ao faer login."})
-    }
-})
 
 app.post('/barbeiro', async (req, res) =>{
     const {nome, cpf, telefone} = req.body;
@@ -156,7 +126,7 @@ app.delete('/barbeiro/:id', async (req, res) =>{
 })
 
 
-app.get('/cliente', autenticarToken, async (req, res) =>{
+app.get('/cliente', async (req, res) =>{
     try{
         const get = await pool.query("SELECT * FROM cliente")
         return res.status(200).json(get.rows)
@@ -197,6 +167,35 @@ app.delete('/cliente/:id', async (req, res) =>{
     } catch(err){
         return res.status(400).json("Erro ao deletar cliente")
     }
+})
+
+app.post('/agendamento', async (req, res) =>{
+    const {id_servico, data_agendamento, id_barbeiro, id_cliente} = req.body
+    try{
+        const agendar = await pool.query("INSERT INTO agendamento (id_servico, data_agendamento, id_barbeiro, id_cliente) VALUES ($1, $2, $3, $4) RETURNING *", [id_servico, data_agendamento, id_barbeiro, id_cliente])
+        return res.status(201).json(agendar.rows[0])
+    } catch(err){
+        return res.status(400).json("Erro ao agendar")
+    }
+})
+
+app.get('/agendamento', async (req, res) =>{
+    const ordenar = await pool.query(` SELECT
+        agendamento.id,
+        TO_CHAR(agendamento.data_agendamento, 'YYYY-MM-DD') AS data_agendamento,
+        agendamento.id_servico,
+        servico.nome AS servico,
+        servico.preco,
+        agendamento.id_cliente,
+        cliente.nome AS id_cliente,
+        agendamento.id_barbeiro,
+        barbeiro.nome AS barbeiro
+    FROM agendamento
+    JOIN servico ON servico.id = agendamento.id_servico
+    JOIN cliente ON cliente.id = agendamento.id_cliente
+    JOIN barbeiro on barbeiro.id = agendamento.id_barbeiro
+    ORDER BY agendamento.data_agendamento`)
+    res.status(201).json(ordenar.rows)
 })
 
 app.listen(PORT, ()=>{
