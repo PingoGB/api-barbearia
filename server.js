@@ -210,7 +210,7 @@ app.put('/agendamento/:id', async (req, res) =>{
 })
 
 app.delete('/agendamento/:id', async (req, res) =>{
-    const {id} = req.params;
+    const {id} = req.params
     try{
         const deleteAgendamento = await pool.query("DELETE FROM agendamento WHERE id = $1 RETURNING *", [id])
         return res.status(200).json("Agendamento excluído com sucesso")
