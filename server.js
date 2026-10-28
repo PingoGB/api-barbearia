@@ -198,6 +198,17 @@ app.get('/agendamento', async (req, res) =>{
     res.status(201).json(ordenar.rows)
 })
 
+app.put('/agendamento/:id', async (req, res) =>{
+    const {id_servico, data_agendamento, id_barbeiro, id_cliente} = req.body
+    const {id} = req.params;
+    try{
+        const putAgendamento = await pool.query("UPDATE agendamento SET id_servico = $1, data_agendamento = $2, id_barbeiro = $3, id_cliente = $4 WHERE id = $5 RETURNING *", [id_servico, data_agendamento, id_barbeiro, id_cliente, id])
+        return res.status(200).json(putAgendamento.rows[0])
+    } catch(err){
+        return res.status(400).json("Erro ao atualizar agendamento")
+    }
+})
+
 app.listen(PORT, ()=>{
     console.log(`Servidor rodando na porta: ${PORT}`)
 })
