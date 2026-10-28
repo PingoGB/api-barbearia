@@ -136,6 +136,18 @@ app.get('/cliente', async (req, res) =>{
     }
 })
 
+app.post('/cliente', async (req, res) =>{
+    const {nome, cpf, telefone} = req.body
+    try{
+        const cpfHash = await bcrypt.hash(cpf, SALT)
+        const telefoneHash = await bcrypt.hash(telefone, SALT)
+        const postCliente = await pool.query("INSERT INTO cliente (nome, cpf, telefone) VALUES ($1, $2, $3) RETURNING *", [nome, cpfHash, telefoneHash])
+        return res.status(201).json(postCliente.rows[0])
+    } catch(err){
+        return res.status(400).json("Erro ao cadastrar cliente.")
+    }
+})
+
 app.listen(PORT, ()=>{
     console.log(`Servidor rodando na porta: ${PORT}`)
 })
